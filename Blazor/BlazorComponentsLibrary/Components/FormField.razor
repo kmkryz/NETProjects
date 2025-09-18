@@ -1,0 +1,233 @@
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.Forms
+@using System.ComponentModel.DataAnnotations
+@using System.Linq.Expressions
+
+<div class="form-field @GetFieldClass()">
+    <label for="@FieldId" class="form-label @GetLabelClass()">
+        @Label
+        @if (IsRequired)
+        {
+            <span class="text-danger">*</span>
+        }
+    </label>
+
+    @if (FieldType == FormFieldType.TextArea)
+    {
+        <InputTextArea id="@FieldId" class="@GetInputClass()" Value="Value" ValueChanged="@OnValueChanged"
+            @oninput="OnInputChanged" placeholder="@Placeholder" rows="@Rows" disabled="@IsDisabled"
+            readonly="@IsReadOnly" />
+    }
+    else if (FieldType == FormFieldType.Select)
+    {
+        <InputSelect id="@FieldId" class="@GetInputClass()" Value="Value" ValueChanged="@OnValueChanged"
+            disabled="@IsDisabled">
+            @if (!string.IsNullOrEmpty(Placeholder))
+            {
+                <option value="">@Placeholder</option>
+            }
+            @if (SelectOptions != null)
+            {
+                @foreach (var option in SelectOptions)
+                {
+                    <option value="@option.Value">@option.Text</option>
+                }
+            }
+            @ChildContent
+        </InputSelect>
+    }
+    else if (FieldType == FormFieldType.Checkbox)
+    {
+        <div class="form-check">
+            <InputCheckbox id="@FieldId" class="@GetInputClass()" Value="BoolValue" ValueChanged="@OnBoolValueChanged"
+                disabled="@IsDisabled" />
+            <label class="form-check-label" for="@FieldId">
+                @Label
+            </label>
+        </div>
+    }
+    else
+    {
+        <InputText id="@FieldId" type="@GetInputType()" class="@GetInputClass()" Value="Value"
+            ValueChanged="@OnValueChanged" @oninput="OnInputChanged" placeholder="@Placeholder" disabled="@IsDisabled"
+            readonly="@IsReadOnly" />
+    }
+
+    @if (ShowHelpText && !string.IsNullOrEmpty(HelpText))
+    {
+        <div class="form-text">@HelpText</div>
+    }
+
+    @if (ShowCharacterCount && !string.IsNullOrEmpty(Value))
+    {
+        <div class="form-text text-end">
+            <small class="@GetCharacterCountClass()">@Value.Length@(MaxLength > 0 ? $"/{MaxLength}" : "")</small>
+        </div>
+    }
+
+    <ValidationMessage For="@ValidationFor" class="text-danger" />
+</div>
+
+@code {
+    [Parameter] public string FieldId { get; set; } = Guid.NewGuid().ToString();
+    [Parameter] public string Label { get; set; } = "";
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public EventCallback<string?> ValueChanged { get; set; }
+    [Parameter] public bool BoolValue { get; set; }
+    [Parameter] public EventCallback<bool> BoolValueChanged { get; set; }
+    [Parameter] public FormFieldType FieldType { get; set; } = FormFieldType.Text;
+    [Parameter] public string? Placeholder { get; set; }
+    [Parameter] public string? HelpText { get; set; }
+    [Parameter] public bool IsRequired { get; set; }
+    [Parameter] public bool IsDisabled { get; set; }
+    [Parameter] public bool IsReadOnly { get; set; }
+    [Parameter] public bool ShowHelpText { get; set; } = true;
+    [Parameter] public bool ShowCharacterCount { get; set; }
+    [Parameter] public int MaxLength { get; set; }
+    [Parameter] public int Rows { get; set; } = 3;
+    [Parameter] public List<SelectOption>? SelectOptions { get; set; }
+    [Parameter] public Expression<Func<string?>>? ValidationFor { get; set; }
+    [Parameter] public string? AdditionalClass { get; set; }
+    [Parameter] public FieldSize Size { get; set; } = FieldSize.Medium;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private string GetFieldClass()
+    {
+        var sizeClass = Size switch
+        {
+            FieldSize.Small => "form-field-sm",
+            FieldSize.Medium => "",
+            FieldSize.Large => "form-field-lg",
+            _ => ""
+        };
+
+        return $"form-field {sizeClass} {AdditionalClass}".Trim();
+    }
+
+    private string GetLabelClass()
+    {
+        return Size switch
+        {
+            FieldSize.Small => "form-label-sm",
+            FieldSize.Large => "form-label-lg",
+            _ => ""
+        };
+    }
+
+    private string GetInputClass()
+    {
+        var baseClass = FieldType switch
+        {
+            FormFieldType.Checkbox => "form-check-input",
+            _ => "form-control"
+        };
+
+        var sizeClass = Size switch
+        {
+            FieldSize.Small => "form-control-sm",
+            FieldSize.Large => "form-control-lg",
+            _ => ""
+        };
+
+        var stateClass = IsDisabled ? "disabled" : "";
+        var readonlyClass = IsReadOnly ? "form-control-plaintext" : "";
+
+        return $"{baseClass} {sizeClass} {stateClass} {readonlyClass}".Trim();
+    }
+
+    private string GetInputType()
+    {
+        return FieldType switch
+        {
+            FormFieldType.Email => "email",
+            FormFieldType.Password => "password",
+            FormFieldType.Number => "number",
+            FormFieldType.Url => "url",
+            FormFieldType.Tel => "tel",
+            FormFieldType.Date => "date",
+            FormFieldType.Time => "time",
+            FormFieldType.DateTime => "datetime-local",
+            _ => "text"
+        };
+    }
+
+    private string GetCharacterCountClass()
+    {
+        if (MaxLength > 0 && !string.IsNullOrEmpty(Value))
+        {
+            return Value.Length > MaxLength ? "text-danger" :
+            Value.Length > MaxLength * 0.8 ? "text-warning" : "text-muted";
+        }
+        return "text-muted";
+    }
+
+    private async Task OnInputChanged(ChangeEventArgs e)
+    {
+        Value = e.Value?.ToString();
+        await ValueChanged.InvokeAsync(Value);
+    }
+
+    private async Task HandleValueChanged(string? value)
+    {
+        Value = value;
+        await ValueChanged.InvokeAsync(Value);
+    }
+
+    private async Task HandleBoolValueChanged(bool value)
+    {
+        BoolValue = value;
+        await BoolValueChanged.InvokeAsync(BoolValue);
+    }
+
+    private EventCallback<string?> OnValueChanged => EventCallback.Factory.Create<string?>(this, HandleValueChanged);
+    private EventCallback<bool> OnBoolValueChanged => EventCallback.Factory.Create<bool>(this, HandleBoolValueChanged);
+
+    public enum FormFieldType
+    {
+        Text,
+        Email,
+        Password,
+        Number,
+        Url,
+        Tel,
+        Date,
+        Time,
+        DateTime,
+        TextArea,
+        Select,
+        Checkbox
+    }
+
+    public enum FieldSize
+    {
+        Small,
+        Medium,
+        Large
+    }
+
+    public class SelectOption
+    {
+        public string Value { get; set; } = "";
+        public string Text { get; set; } = "";
+    }
+}
+
+<style>
+    .form-field-sm .form-label {
+        font-size: 0.875rem;
+    }
+
+    .form-field-lg .form-label {
+        font-size: 1.125rem;
+    }
+
+    .form-field .form-control:focus {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+
+    .form-field .form-check-input:checked {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+</style>

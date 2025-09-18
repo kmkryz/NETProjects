@@ -1,0 +1,88 @@
+@using Microsoft.AspNetCore.Components.Web
+
+@if (IsVisible)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog @GetModalSizeClass()" role="document">
+            <div class="modal-content">
+                @if (!string.IsNullOrEmpty(Title) || HeaderTemplate != null)
+                {
+                    <div class="modal-header">
+                        @if (HeaderTemplate != null)
+                        {
+                            @HeaderTemplate
+                        }
+                        else
+                        {
+                            <h5 class="modal-title">@Title</h5>
+                        }
+                        @if (ShowCloseButton)
+                        {
+                            <button type="button" class="btn-close" @onclick="Close"></button>
+                        }
+                    </div>
+                }
+                
+                <div class="modal-body">
+                    @if (BodyTemplate != null)
+                    {
+                        @BodyTemplate
+                    }
+                    else
+                    {
+                        @ChildContent
+                    }
+                </div>
+                
+                @if (FooterTemplate != null)
+                {
+                    <div class="modal-footer">
+                        @FooterTemplate
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public RenderFragment? HeaderTemplate { get; set; }
+    [Parameter] public RenderFragment? BodyTemplate { get; set; }
+    [Parameter] public RenderFragment? FooterTemplate { get; set; }
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback OnVisibleChanged { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public ModalSize Size { get; set; } = ModalSize.Medium;
+    [Parameter] public bool ShowCloseButton { get; set; } = true;
+    [Parameter] public bool CloseOnBackdropClick { get; set; } = true;
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private string GetModalSizeClass()
+    {
+        return Size switch
+        {
+            ModalSize.Small => "modal-sm",
+            ModalSize.Medium => "",
+            ModalSize.Large => "modal-lg",
+            ModalSize.ExtraLarge => "modal-xl",
+            _ => ""
+        };
+    }
+
+    private async Task Close()
+    {
+        IsVisible = false;
+        await OnVisibleChanged.InvokeAsync();
+        await OnClose.InvokeAsync();
+    }
+
+    public enum ModalSize
+    {
+        Small,
+        Medium,
+        Large,
+        ExtraLarge
+    }
+}

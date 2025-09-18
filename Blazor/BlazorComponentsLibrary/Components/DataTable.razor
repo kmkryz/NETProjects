@@ -1,0 +1,449 @@
+@using Microsoft.AspNetCore.Components.Web
+@typeparam TItem
+
+<div class="data-table-container @ContainerClass">
+    @if (ShowHeader)
+    {
+        <div class="data-table-header d-flex justify-content-between align-items-center mb-3">
+            @if (HeaderTemplate != null)
+            {
+                @HeaderTemplate
+            }
+            else
+            {
+                <h5>@Title</h5>
+            }
+
+            @if (ShowSearch && !string.IsNullOrEmpty(SearchPlaceholder))
+            {
+                <div class="search-container">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" class="form-control" placeholder="@SearchPlaceholder" @bind="searchText"
+                            @oninput="OnSearchChanged" />
+                        @if (!string.IsNullOrEmpty(searchText))
+                        {
+                            <button class="btn btn-outline-secondary" @onclick="ClearSearch">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    @if (Items != null && FilteredItems.Any())
+    {
+        <div class="table-responsive">
+            <table class="table @GetTableClass()">
+                <thead class="@GetHeaderClass()">
+                    <tr>
+                        @if (ShowRowNumbers)
+                        {
+                            <th scope="col" class="text-center" style="width: 60px;">#</th>
+                        }
+                        @if (ShowCheckboxes)
+                        {
+                            <th scope="col" class="text-center" style="width: 60px;">
+                                <input type="checkbox" class="form-check-input" checked="@selectAll"
+                                    @onchange="OnSelectAllChanged" />
+                            </th>
+                        }
+                        @if (HeaderTemplate != null)
+                        {
+                            @HeaderTemplate
+                        }
+                        else
+                        {
+                            @foreach (var column in Columns)
+                            {
+                                <th scope="col" class="@GetColumnClass(column)" @onclick="() => OnSort(column.PropertyName)"
+                                    style="cursor: pointer;">
+                                    @column.Title
+                                    @if (column.Sortable)
+                                    {
+                                        <i class="bi @GetSortIcon(column.PropertyName) ms-1"></i>
+                                    }
+                                </th>
+                            }
+                        }
+                        @if (ShowActions)
+                        {
+                            <th scope="col" class="text-end" style="width: 120px;">Actions</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var (item, index) in FilteredItems.Select((item, index) => (item, index)))
+                    {
+                        var rowIndex = (CurrentPage - 1) * PageSize + index + 1;
+                        <tr class="@GetRowClass(item)" @onclick="() => OnRowClick.InvokeAsync(item)">
+                            @if (ShowRowNumbers)
+                            {
+                                <td class="text-center text-muted">@rowIndex</td>
+                            }
+                            @if (ShowCheckboxes)
+                            {
+                                <td class="text-center">
+                                    <input type="checkbox" class="form-check-input" checked="@GetItemSelected(item)"
+                                        @onchange="@(() => OnItemSelectionChanged(item))" />
+                                </td>
+                            }
+                            @if (RowTemplate != null)
+                            {
+                                @RowTemplate(item)
+                            }
+                            else
+                            {
+                                @foreach (var column in Columns)
+                                {
+                                    <td class="@GetCellClass(column, item)">
+                                        @GetCellValue(item, column)
+                                    </td>
+                                }
+                            }
+                            @if (ShowActions)
+                            {
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        @if (ActionTemplate != null)
+                                        {
+                                            @ActionTemplate(item)
+                                        }
+                                        else
+                                        {
+                                            <button class="btn btn-outline-primary btn-sm" @onclick="() => OnEdit.InvokeAsync(item)"
+                                                @onclick:stopPropagation="true" title="Edit">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger btn-sm" @onclick="() => OnDelete.InvokeAsync(item)"
+                                                @onclick:stopPropagation="true" title="Delete">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        }
+                                    </div>
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (ShowPagination && TotalPages > 1)
+        {
+            <nav aria-label="Table pagination">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item @(CurrentPage == 1 ? "disabled" : "")">
+                        <button class="page-link" @onclick="() => GoToPage(1)" disabled="@(CurrentPage == 1)">
+                            <i class="bi bi-chevron-double-left"></i>
+                        </button>
+                    </li>
+                    <li class="page-item @(CurrentPage == 1 ? "disabled" : "")">
+                        <button class="page-link" @onclick="() => GoToPage(CurrentPage - 1)" disabled="@(CurrentPage == 1)">
+                            <i class="bi bi-chevron-left"></i>
+                        </button>
+                    </li>
+
+                    @for (int i = Math.Max(1, CurrentPage - 2); i <= Math.Min(TotalPages, CurrentPage + 2); i++)
+                    {
+                        <li class="page-item @(i == CurrentPage ? "active" : "")">
+                            <button class="page-link" @onclick="() => GoToPage(i)">@i</button>
+                        </li>
+                    }
+
+                    <li class="page-item @(CurrentPage == TotalPages ? "disabled" : "")">
+                        <button class="page-link" @onclick="() => GoToPage(CurrentPage + 1)"
+                            disabled="@(CurrentPage == TotalPages)">
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </li>
+                    <li class="page-item @(CurrentPage == TotalPages ? "disabled" : "")">
+                        <button class="page-link" @onclick="() => GoToPage(TotalPages)" disabled="@(CurrentPage == TotalPages)">
+                            <i class="bi bi-chevron-double-right"></i>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        }
+
+        @if (ShowFooter)
+        {
+            <div class="data-table-footer d-flex justify-content-between align-items-center mt-3">
+                <div class="text-muted">
+                    Showing @((CurrentPage - 1) * PageSize + 1) to @(Math.Min(CurrentPage * PageSize, TotalItems)) of
+                    @TotalItems entries
+                </div>
+                @if (FooterTemplate != null)
+                {
+                    @FooterTemplate
+                }
+            </div>
+        }
+    }
+    else
+    {
+        <div class="text-center py-5">
+            @if (EmptyTemplate != null)
+            {
+                @EmptyTemplate
+            }
+            else
+            {
+                <i class="bi bi-table display-4 text-muted"></i>
+                <p class="mt-2 text-muted">No data available</p>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public IEnumerable<TItem>? Items { get; set; }
+    [Parameter] public List<DataTableColumn<TItem>> Columns { get; set; } = new();
+    [Parameter] public RenderFragment? HeaderTemplate { get; set; }
+    [Parameter] public RenderFragment<TItem>? RowTemplate { get; set; }
+    [Parameter] public RenderFragment<TItem>? ActionTemplate { get; set; }
+    [Parameter] public RenderFragment? FooterTemplate { get; set; }
+    [Parameter] public RenderFragment? EmptyTemplate { get; set; }
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public string? ContainerClass { get; set; }
+    [Parameter] public bool ShowHeader { get; set; } = true;
+    [Parameter] public bool ShowFooter { get; set; } = true;
+    [Parameter] public bool ShowSearch { get; set; } = true;
+    [Parameter] public string? SearchPlaceholder { get; set; } = "Search...";
+    [Parameter] public bool ShowPagination { get; set; } = true;
+    [Parameter] public bool ShowRowNumbers { get; set; } = false;
+    [Parameter] public bool ShowCheckboxes { get; set; } = false;
+    [Parameter] public bool ShowActions { get; set; } = true;
+    [Parameter] public bool Striped { get; set; } = true;
+    [Parameter] public bool Hover { get; set; } = true;
+    [Parameter] public bool Bordered { get; set; } = false;
+    [Parameter] public bool Small { get; set; } = false;
+    [Parameter] public int PageSize { get; set; } = 10;
+    [Parameter] public EventCallback<TItem> OnRowClick { get; set; }
+    [Parameter] public EventCallback<TItem> OnEdit { get; set; }
+    [Parameter] public EventCallback<TItem> OnDelete { get; set; }
+    [Parameter] public EventCallback<List<TItem>> OnSelectionChanged { get; set; }
+    [Parameter] public Func<TItem, bool>? RowClassFunction { get; set; }
+    [Parameter] public Func<TItem, bool>? IsItemSelected { get; set; }
+
+    private string searchText = "";
+    private string sortColumn = "";
+    private bool sortAscending = true;
+    private int currentPage = 1;
+    private bool selectAll = false;
+    private HashSet<TItem> selectedItems = new();
+
+    private IEnumerable<TItem> FilteredItems => GetFilteredAndSortedItems();
+    private int TotalItems => Items?.Count() ?? 0;
+    private int TotalPages => (int)Math.Ceiling((double)TotalItems / PageSize);
+    private int CurrentPage => currentPage;
+
+    private string GetTableClass()
+    {
+        var classes = new List<string> { "table" };
+
+        if (Striped) classes.Add("table-striped");
+        if (Hover) classes.Add("table-hover");
+        if (Bordered) classes.Add("table-bordered");
+        if (Small) classes.Add("table-sm");
+
+        return string.Join(" ", classes);
+    }
+
+    private string GetHeaderClass()
+    {
+        return "table-dark";
+    }
+
+    private string GetColumnClass(DataTableColumn<TItem> column)
+    {
+        var classes = new List<string>();
+
+        if (column.Sortable) classes.Add("sortable");
+        if (column.Align == ColumnAlign.Center) classes.Add("text-center");
+        if (column.Align == ColumnAlign.Right) classes.Add("text-end");
+
+        return string.Join(" ", classes);
+    }
+
+    private string GetRowClass(TItem item)
+    {
+        var classes = new List<string>();
+
+        if (RowClassFunction != null && RowClassFunction(item))
+        {
+            classes.Add("table-warning");
+        }
+
+        if (IsItemSelected?.Invoke(item) == true)
+        {
+            classes.Add("table-primary");
+        }
+
+        return string.Join(" ", classes);
+    }
+
+    private string GetCellClass(DataTableColumn<TItem> column, TItem item)
+    {
+        var classes = new List<string>();
+
+        if (column.Align == ColumnAlign.Center) classes.Add("text-center");
+        if (column.Align == ColumnAlign.Right) classes.Add("text-end");
+
+        return string.Join(" ", classes);
+    }
+
+    private string GetSortIcon(string columnName)
+    {
+        if (sortColumn != columnName) return "bi-arrow-up-down";
+        return sortAscending ? "bi-arrow-up" : "bi-arrow-down";
+    }
+
+    private object? GetCellValue(TItem item, DataTableColumn<TItem> column)
+    {
+        if (column.ValueFunction != null)
+        {
+            return column.ValueFunction(item);
+        }
+
+        if (column.PropertyName != null)
+        {
+            var property = typeof(TItem).GetProperty(column.PropertyName);
+            return property?.GetValue(item);
+        }
+
+        return "";
+    }
+
+    private bool GetItemSelected(TItem item)
+    {
+        return selectedItems.Contains(item);
+    }
+
+    private IEnumerable<TItem> GetFilteredAndSortedItems()
+    {
+        if (Items == null) return Enumerable.Empty<TItem>();
+
+        var query = Items.AsQueryable();
+
+        // Apply search filter
+        if (!string.IsNullOrEmpty(searchText))
+        {
+            var searchResults = query.Where(item =>
+            Columns.Any(col =>
+            (col.SearchFunction != null && col.SearchFunction.Invoke(item, searchText)) ||
+            (GetCellValue(item, col) != null && GetCellValue(item, col).ToString().Contains(searchText,
+            StringComparison.OrdinalIgnoreCase))
+            )
+            );
+            query = searchResults.AsQueryable();
+        }
+
+        // Apply sorting
+        if (!string.IsNullOrEmpty(sortColumn))
+        {
+            var column = Columns.FirstOrDefault(c => c.PropertyName == sortColumn);
+            if (column?.SortFunction != null)
+            {
+                var sortedResults = sortAscending ?
+                query.OrderBy(column.SortFunction) :
+                query.OrderByDescending(column.SortFunction);
+                query = sortedResults.AsQueryable();
+            }
+        }
+
+        // Apply pagination
+        if (ShowPagination)
+        {
+            query = query.Skip((currentPage - 1) * PageSize).Take(PageSize);
+        }
+
+        return query.ToList();
+    }
+
+    private void OnSearchChanged(ChangeEventArgs e)
+    {
+        searchText = e.Value?.ToString() ?? "";
+        currentPage = 1; // Reset to first page when searching
+    }
+
+    private void ClearSearch()
+    {
+        searchText = "";
+        currentPage = 1;
+    }
+
+    private void OnSort(string columnName)
+    {
+        if (sortColumn == columnName)
+        {
+            sortAscending = !sortAscending;
+        }
+        else
+        {
+            sortColumn = columnName;
+            sortAscending = true;
+        }
+    }
+
+    private void GoToPage(int page)
+    {
+        if (page >= 1 && page <= TotalPages)
+        {
+            currentPage = page;
+        }
+    }
+
+    private void OnSelectAllChanged(ChangeEventArgs e)
+    {
+        selectAll = (bool)(e.Value ?? false);
+
+        if (selectAll)
+        {
+            selectedItems = new HashSet<TItem>(FilteredItems);
+        }
+        else
+        {
+            selectedItems.Clear();
+        }
+
+        OnSelectionChanged.InvokeAsync(selectedItems.ToList());
+    }
+
+    private void OnItemSelectionChanged(TItem item)
+    {
+        if (selectedItems.Contains(item))
+        {
+            selectedItems.Remove(item);
+        }
+        else
+        {
+            selectedItems.Add(item);
+        }
+
+        selectAll = selectedItems.Count == FilteredItems.Count();
+        OnSelectionChanged.InvokeAsync(selectedItems.ToList());
+    }
+
+    public class DataTableColumn<TItem>
+    {
+        public string Title { get; set; } = "";
+        public string? PropertyName { get; set; }
+        public Func<TItem, object?>? ValueFunction { get; set; }
+        public Func<TItem, IComparable>? SortFunction { get; set; }
+        public Func<TItem, string, bool>? SearchFunction { get; set; }
+        public bool Sortable { get; set; } = true;
+        public ColumnAlign Align { get; set; } = ColumnAlign.Left;
+    }
+
+    public enum ColumnAlign
+    {
+        Left,
+        Center,
+        Right
+    }
+}

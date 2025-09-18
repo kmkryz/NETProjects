@@ -1,0 +1,53 @@
+@typeparam TItem
+
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead class="table-dark">
+            <tr>
+                @HeaderTemplate
+            </tr>
+        </thead>
+        <tbody>
+            @if (Items != null)
+            {
+                @foreach (var item in Items)
+                {
+                    <tr>
+                        @RowTemplate(item)
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="100%" class="text-center text-muted">
+                        @EmptyTemplate
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (Items != null && Items.Any())
+{
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <div>
+            <small class="text-muted">Showing @Items.Count() items</small>
+        </div>
+        <div>
+            @if (PaginationTemplate != null)
+            {
+                @PaginationTemplate
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public IEnumerable<TItem>? Items { get; set; }
+    [Parameter] public RenderFragment HeaderTemplate { get; set; } = default!;
+    [Parameter] public RenderFragment<TItem> RowTemplate { get; set; } = default!;
+    [Parameter] public RenderFragment EmptyTemplate { get; set; } = default!;
+    [Parameter] public RenderFragment? PaginationTemplate { get; set; }
+}

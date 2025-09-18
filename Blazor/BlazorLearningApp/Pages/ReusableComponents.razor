@@ -1,0 +1,145 @@
+@page "/reusable-components"
+@using BlazorComponentsLibrary.Components
+
+<PageTitle>Reusable Components</PageTitle>
+
+<h1>Reusable Components Demo</h1>
+
+<div class="row">
+    <div class="col-12">
+        <h3>Custom Button Components</h3>
+        <div class="mb-3">
+            <Button Type="Button.ButtonType.Primary" OnClick="OnButtonClick">
+                Primary Button
+            </Button>
+            <Button Type="Button.ButtonType.Success" Size="Button.ButtonSize.Large" OnClick="OnButtonClick" class="ms-2">
+                <i class="oi oi-check"></i> Success Button
+            </Button>
+            <Button Type="Button.ButtonType.Danger" Size="Button.ButtonSize.Small" OnClick="OnButtonClick" class="ms-2">
+                <i class="oi oi-x"></i> Danger Button
+            </Button>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <h3>Card Components</h3>
+        <Card Title="Simple Card" Style="Card.CardStyle.Default" class="mb-3">
+            <p>This is a simple card with default styling.</p>
+        </Card>
+        
+        <Card Style="Card.CardStyle.Outline" IsClickable="true" OnClick="OnCardClick" class="mb-3">
+            <HeaderTemplate>
+                <h5 class="card-title mb-0">
+                    <i class="oi oi-cursor"></i> Clickable Card
+                </h5>
+            </HeaderTemplate>
+            <BodyTemplate>
+                <p>This card is clickable and has custom header content.</p>
+            </BodyTemplate>
+            <FooterTemplate>
+                <small class="text-muted">Click me!</small>
+            </FooterTemplate>
+        </Card>
+    </div>
+    
+    <div class="col-md-6">
+        <h3>Modal Component</h3>
+        <Button Type="Button.ButtonType.Info" OnClick="ShowModal">
+            <i class="oi oi-eye"></i> Show Modal
+        </Button>
+        
+        <Button Type="Button.ButtonType.Warning" OnClick="ShowLargeModal" class="ms-2">
+            <i class="oi oi-resize-both"></i> Large Modal
+        </Button>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <h3>Component Library Features</h3>
+        <div class="alert alert-info">
+            <h5>Reusable Components Library</h5>
+            <p>This page demonstrates components from our custom Razor class library:</p>
+            <ul>
+                <li><strong>Button Component:</strong> Customizable button with different types, sizes, and icons</li>
+                <li><strong>Card Component:</strong> Flexible card with header, body, and footer templates</li>
+                <li><strong>Modal Component:</strong> Reusable modal dialog with different sizes</li>
+            </ul>
+            <p>These components can be packaged and shared across multiple Blazor applications.</p>
+        </div>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(clickedItem))
+{
+    <div class="alert alert-success mt-3">
+        <h5>Clicked: @clickedItem</h5>
+    </div>
+}
+
+<!-- Modal Components -->
+<Modal @ref="modal" IsVisible="isModalVisible" Title="Sample Modal" OnClose="HideModal">
+    <BodyTemplate>
+        <p>This is a sample modal dialog created with our reusable component.</p>
+        <p>You can put any content here, including forms, images, or other components.</p>
+    </BodyTemplate>
+</Modal>
+
+<Modal @ref="largeModal" IsVisible="isLargeModalVisible" Title="Large Modal" Size="Modal.ModalSize.Large" OnClose="HideLargeModal">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col-md-6">
+                <h5>Left Column</h5>
+                <p>This modal demonstrates the large size option.</p>
+            </div>
+            <div class="col-md-6">
+                <h5>Right Column</h5>
+                <p>It can contain complex layouts and multiple columns.</p>
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Type="Button.ButtonType.Secondary" OnClick="HideLargeModal">Close</Button>
+        <Button Type="Button.ButtonType.Primary" OnClick="OnButtonClick" class="ms-2">Save Changes</Button>
+    </FooterTemplate>
+</Modal>
+
+@code {
+    private string clickedItem = string.Empty;
+    private bool isModalVisible = false;
+    private bool isLargeModalVisible = false;
+    private Modal? modal;
+    private Modal? largeModal;
+
+    private void OnButtonClick(MouseEventArgs e)
+    {
+        clickedItem = "Button clicked!";
+    }
+
+    private void OnCardClick(MouseEventArgs e)
+    {
+        clickedItem = "Card clicked!";
+    }
+
+    private void ShowModal()
+    {
+        isModalVisible = true;
+    }
+
+    private void HideModal()
+    {
+        isModalVisible = false;
+    }
+
+    private void ShowLargeModal()
+    {
+        isLargeModalVisible = true;
+    }
+
+    private void HideLargeModal()
+    {
+        isLargeModalVisible = false;
+    }
+}

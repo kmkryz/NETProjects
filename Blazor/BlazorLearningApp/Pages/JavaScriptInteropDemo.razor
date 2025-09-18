@@ -1,0 +1,279 @@
+@page "/js-interop-demo"
+@using BlazorLearningApp.Services
+@inject JavaScriptInteropService JsInterop
+@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
+
+<PageTitle>JavaScript Interop Demo</PageTitle>
+
+<h1>JavaScript Interop & Lifecycle Demo</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Component Lifecycle Events</h5>
+            </div>
+            <div class="card-body">
+                <div id="lifecycle-log" class="bg-light p-3" style="height: 300px; overflow-y: auto;">
+                    @foreach (var logEntry in lifecycleLog)
+                    {
+                            <div class="small text-muted">@logEntry</div>
+                    }
+                </div>
+                <button class="btn btn-sm btn-outline-secondary mt-2" @onclick="ClearLog">Clear Log</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>JavaScript Interop Functions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary" @onclick="ShowAlert">Show Alert</button>
+                    <button class="btn btn-info" @onclick="ShowConfirm">Show Confirm</button>
+                    <button class="btn btn-warning" @onclick="ShowPrompt">Show Prompt</button>
+                    <button class="btn btn-success" @onclick="SetPageTitle">Set Page Title</button>
+                    <button class="btn btn-secondary" @onclick="ScrollToTop">Scroll to Top</button>
+                    <button class="btn btn-dark" @onclick="ToggleElementClass">Toggle Element Class</button>
+                    <button class="btn btn-outline-primary" @onclick="MeasureElement">Measure Element</button>
+                    <button class="btn btn-outline-success" @onclick="CopyToClipboard">Copy to Clipboard</button>
+                    <button class="btn btn-outline-warning" @onclick="VibrateDevice">Vibrate Device</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Interactive Demo Area</h5>
+            </div>
+            <div class="card-body">
+                <div id="demo-element" class="p-4 border rounded bg-light text-center">
+                    <h4>This is a demo element</h4>
+                    <p>Click the buttons above to interact with this element using JavaScript!</p>
+                    <div id="measurements" class="mt-3">
+                        <small class="text-muted">Measurements will appear here</small>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <h6>Clipboard Test</h6>
+                    <div class="input-group">
+                        <input type="text" class="form-control" @bind="clipboardText" placeholder="Enter text to copy">
+                        <button class="btn btn-outline-secondary" @onclick="PasteFromClipboard">Paste from Clipboard</button>
+                    </div>
+                    <small class="text-muted">@clipboardResult</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Component State</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <strong>Render Count:</strong> @renderCount
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Is Initialized:</strong> @isInitialized
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Is Disposed:</strong> @isDisposed
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Last Action:</strong> @lastAction
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<string> lifecycleLog = new();
+    private int renderCount = 0;
+    private bool isInitialized = false;
+    private bool isDisposed = false;
+    private string lastAction = "None";
+    private string clipboardText = "";
+    private string clipboardResult = "";
+    private bool elementClassToggled = false;
+
+    protected override void OnInitialized()
+    {
+        AddLog("OnInitialized() - Component is being initialized");
+        isInitialized = true;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        AddLog("OnInitializedAsync() - Async initialization");
+        await JsInterop.LogToConsole("Component initialized asynchronously");
+    }
+
+    protected override void OnParametersSet()
+    {
+        AddLog("OnParametersSet() - Parameters have been set");
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        AddLog("OnParametersSetAsync() - Async parameter setting");
+        await JsInterop.LogToConsole("Parameters set asynchronously");
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        AddLog($"OnAfterRender() - First render: {firstRender}");
+        renderCount++;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        AddLog($"OnAfterRenderAsync() - First render: {firstRender}");
+        if (firstRender)
+        {
+            await JsInterop.LogToConsole("Component rendered for the first time");
+        }
+    }
+
+    private void AddLog(string message)
+    {
+        var timestamp = DateTime.Now.ToString("HH:mm:ss.fff");
+        lifecycleLog.Add($"[{timestamp}] {message}");
+        
+        // Keep only last 20 log entries
+        if (lifecycleLog.Count > 20)
+        {
+            lifecycleLog.RemoveAt(0);
+        }
+        
+        StateHasChanged();
+    }
+
+    private async Task ShowAlert()
+    {
+        lastAction = "Show Alert";
+        await JsInterop.ShowAlert("Hello from Blazor! This is a JavaScript alert.");
+        AddLog("Alert shown");
+    }
+
+    private async Task ShowConfirm()
+    {
+        lastAction = "Show Confirm";
+        await JsInterop.ShowConfirm("Do you want to continue?");
+        AddLog("Confirm dialog shown");
+    }
+
+    private async Task ShowPrompt()
+    {
+        lastAction = "Show Prompt";
+        var result = await JsInterop.Prompt("Enter your name:");
+        AddLog($"Prompt result: {result}");
+    }
+
+    private async Task SetPageTitle()
+    {
+        lastAction = "Set Page Title";
+        await JsInterop.SetTitle($"Blazor Demo - {DateTime.Now:HH:mm:ss}");
+        AddLog("Page title updated");
+    }
+
+    private async Task ScrollToTop()
+    {
+        lastAction = "Scroll to Top";
+        await JSRuntime.InvokeVoidAsync("scrollToElement", "lifecycle-log");
+        AddLog("Scrolled to lifecycle log");
+    }
+
+    private async Task ToggleElementClass()
+    {
+        lastAction = "Toggle Element Class";
+        var elementId = "demo-element";
+        var className = "bg-primary text-white";
+        
+        if (elementClassToggled)
+        {
+            await JsInterop.RemoveClass(elementId, className);
+        }
+        else
+        {
+            await JsInterop.AddClass(elementId, className);
+        }
+        
+        elementClassToggled = !elementClassToggled;
+        AddLog($"Element class toggled: {elementClassToggled}");
+    }
+
+    private async Task MeasureElement()
+    {
+        lastAction = "Measure Element";
+        var width = await JsInterop.GetElementWidth("demo-element");
+        var height = await JsInterop.GetElementHeight("demo-element");
+        
+        await JsInterop.SetElementText("measurements",
+            $"Width: {width}px, Height: {height}px");
+        
+        AddLog($"Element measured: {width}x{height}px");
+    }
+
+    private async Task CopyToClipboard()
+    {
+        lastAction = "Copy to Clipboard";
+        if (!string.IsNullOrEmpty(clipboardText))
+        {
+            await JsInterop.CopyToClipboard(clipboardText);
+            clipboardResult = "Text copied to clipboard!";
+        }
+        else
+        {
+            clipboardResult = "Please enter some text first";
+        }
+        AddLog("Clipboard operation performed");
+    }
+
+    private async Task PasteFromClipboard()
+    {
+        lastAction = "Paste from Clipboard";
+        var text = await JsInterop.GetClipboardText();
+        clipboardText = text;
+        clipboardResult = $"Pasted: {text}";
+        AddLog("Text pasted from clipboard");
+    }
+
+    private void ClearLog()
+    {
+        lifecycleLog.Clear();
+        AddLog("Log cleared");
+    }
+
+    private async Task VibrateDevice()
+    {
+        lastAction = "Vibrate Device";
+        await JsInterop.Vibrate(200);
+        AddLog("Device vibration triggered");
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (!isDisposed)
+        {
+            AddLog("DisposeAsync() - Component is being disposed");
+            isDisposed = true;
+            await JsInterop.LogToConsole("Component disposed");
+        }
+    }
+}

@@ -1,0 +1,358 @@
+@page "/reusable-components-demo"
+@using BlazorLearningApp.Models
+@using BlazorComponentsLibrary.Components
+
+<PageTitle>Reusable Components Demo</PageTitle>
+
+<h1>Reusable Components Demo</h1>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Enhanced Form Fields</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <FormField Label="Full Name" Value="@formData.FullName"
+                            ValueChanged="@(value => formData.FullName = value ?? "")" IsRequired="true"
+                            Placeholder="Enter your full name" ShowCharacterCount="true" MaxLength="50" />
+
+                        <FormField Label="Email Address" FieldType="FormField.FormFieldType.Email"
+                            Value="@formData.Email" ValueChanged="@(value => formData.Email = value ?? "")"
+                            IsRequired="true" Placeholder="Enter your email" />
+
+                        <FormField Label="Phone Number" FieldType="FormField.FormFieldType.Tel" Value="@formData.Phone"
+                            ValueChanged="@(value => formData.Phone = value ?? "")"
+                            Placeholder="Enter your phone number" />
+                    </div>
+                    <div class="col-md-6">
+                        <FormField Label="Bio" FieldType="FormField.FormFieldType.TextArea" Value="@formData.Bio"
+                            ValueChanged="@(value => formData.Bio = value ?? "")" Rows="4" ShowCharacterCount="true"
+                            MaxLength="500" HelpText="Tell us about yourself" />
+
+                        <FormField Label="Country" FieldType="FormField.FormFieldType.Select" Value="@formData.Country"
+                            ValueChanged="@(value => formData.Country = value ?? "")" SelectOptions="@countryOptions"
+                            Placeholder="Select your country" />
+
+                        <FormField Label="Subscribe to Newsletter" FieldType="FormField.FormFieldType.Checkbox"
+                            BoolValue="@formData.Subscribe" BoolValueChanged="@(value => formData.Subscribe = value)" />
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <button class="btn btn-primary" @onclick="SubmitForm">Submit Form</button>
+                    <button class="btn btn-secondary ms-2" @onclick="ResetForm">Reset</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Enhanced Buttons</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6>Button Types</h6>
+                        <div class="d-grid gap-2">
+                            <Button Type="Button.ButtonType.Primary" OnClick="@(() => ShowMessage("Primary clicked"))">
+                                Primary Button
+                            </Button>
+                            <Button Type="Button.ButtonType.Secondary"
+                                OnClick="@(() => ShowMessage("Secondary clicked"))">
+                                Secondary Button
+                            </Button>
+                            <Button Type="Button.ButtonType.Success" OnClick="@(() => ShowMessage("Success clicked"))">
+                                Success Button
+                            </Button>
+                            <Button Type="Button.ButtonType.Danger" OnClick="@(() => ShowMessage("Danger clicked"))">
+                                Danger Button
+                            </Button>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>Button Sizes</h6>
+                        <div class="d-grid gap-2">
+                            <Button Size="Button.ButtonSize.Small" OnClick="@(() => ShowMessage("Small clicked"))">
+                                Small Button
+                            </Button>
+                            <Button Size="Button.ButtonSize.Medium" OnClick="@(() => ShowMessage("Medium clicked"))">
+                                Medium Button
+                            </Button>
+                            <Button Size="Button.ButtonSize.Large" OnClick="@(() => ShowMessage("Large clicked"))">
+                                Large Button
+                            </Button>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>Button States</h6>
+                        <div class="d-grid gap-2">
+                            <Button OnClick="@(() => ShowMessage("Normal clicked"))">
+                                Normal Button
+                            </Button>
+                            <Button IsDisabled="true">
+                                Disabled Button
+                            </Button>
+                            <Button Icon="bi bi-star" OnClick="@(() => ShowMessage("Icon clicked"))">
+                                Button with Icon
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Enhanced Cards</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <Card Title="Default Card" Style="Card.CardStyle.Default">
+                            <p>This is a default card with some content.</p>
+                            <Button Type="Button.ButtonType.Primary" Size="Button.ButtonSize.Small">
+                                Action
+                            </Button>
+                        </Card>
+                    </div>
+                    <div class="col-md-4">
+                        <Card Title="Outline Card" Style="Card.CardStyle.Outline">
+                            <p>This is an outline card with different styling.</p>
+                            <Button Type="Button.ButtonType.Secondary" Size="Button.ButtonSize.Small">
+                                Action
+                            </Button>
+                        </Card>
+                    </div>
+                    <div class="col-md-4">
+                        <Card Title="Filled Card" Style="Card.CardStyle.Filled">
+                            <p>This is a filled card with background color.</p>
+                            <Button Type="Button.ButtonType.Success" Size="Button.ButtonSize.Small">
+                                Action
+                            </Button>
+                        </Card>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Data Table with Sample Data</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>#</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var (user, index) in sampleUsers.Select((u, i) => (u, i)))
+                            {
+                                <tr @onclick="() => OnUserRowClick(user)" style="cursor: pointer;">
+                                    <td>@(index + 1)</td>
+                                    <td>@user.Name</td>
+                                    <td>@user.Email</td>
+                                    <td class="text-center">@user.Role</td>
+                                    <td class="text-center">
+                                        <span
+                                            class="badge @(user.Status == "Active" ? "bg-success" : user.Status == "Inactive" ? "bg-danger" : "bg-warning")">
+                                            @user.Status
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-primary" @onclick="() => OnUserEdit(user)"
+                                                @onclick:stopPropagation="true">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger" @onclick="() => OnUserDelete(user)"
+                                                @onclick:stopPropagation="true">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Modal Examples</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2 d-md-flex">
+                    <Button OnClick="@(() => ShowModal = true)">
+                        Show Modal
+                    </Button>
+                    <Button OnClick="@(() => ShowLargeModal = true)">
+                        Show Large Modal
+                    </Button>
+                    <Button OnClick="@(() => ShowModalWithoutClose = true)">
+                        Modal without Close Button
+                    </Button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals -->
+<Modal IsVisible="@ShowModal" Title="Sample Modal" OnClose="@(() => ShowModal = false)">
+    <p>This is a sample modal dialog.</p>
+    <p>You can put any content here.</p>
+    <div class="modal-footer">
+        <Button Type="Button.ButtonType.Secondary" OnClick="@(() => ShowModal = false)">
+            Close
+        </Button>
+        <Button Type="Button.ButtonType.Primary" OnClick="@(() => ShowModal = false)">
+            Save Changes
+        </Button>
+    </div>
+</Modal>
+
+<Modal IsVisible="@ShowLargeModal" Title="Large Modal" Size="Modal.ModalSize.Large"
+    OnClose="@(() => ShowLargeModal = false)">
+    <p>This is a large modal dialog.</p>
+    <div class="row">
+        <div class="col-md-6">
+            <h6>Left Column</h6>
+            <p>Content for the left column goes here.</p>
+        </div>
+        <div class="col-md-6">
+            <h6>Right Column</h6>
+            <p>Content for the right column goes here.</p>
+        </div>
+    </div>
+</Modal>
+
+<Modal IsVisible="@ShowModalWithoutClose" Title="Modal without Close Button" ShowCloseButton="false"
+    OnClose="@(() => ShowModalWithoutClose = false)">
+    <p>This modal doesn't have a close button in the header.</p>
+    <p>You need to provide your own close mechanism.</p>
+    <div class="modal-footer">
+        <Button Type="Button.ButtonType.Primary" OnClick="@(() => ShowModalWithoutClose = false)">
+            OK
+        </Button>
+    </div>
+</Modal>
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        @message
+        <button type="button" class="btn-close" @onclick="() => message = string.Empty"></button>
+    </div>
+}
+
+@code {
+    private FormData formData = new();
+    private string message = "";
+    private bool ShowModal = false;
+    private bool ShowLargeModal = false;
+    private bool ShowModalWithoutClose = false;
+
+    private List<FormField.SelectOption> countryOptions = new()
+{
+new() { Value = "US", Text = "United States" },
+new() { Value = "CA", Text = "Canada" },
+new() { Value = "UK", Text = "United Kingdom" },
+new() { Value = "AU", Text = "Australia" },
+new() { Value = "DE", Text = "Germany" },
+new() { Value = "FR", Text = "France" }
+};
+
+    private List<SampleUser> sampleUsers = new()
+{
+new() { Id = 1, Name = "John Doe", Email = "john@example.com", Role = "Admin", Status = "Active" },
+new() { Id = 2, Name = "Jane Smith", Email = "jane@example.com", Role = "User", Status = "Active" },
+new() { Id = 3, Name = "Bob Johnson", Email = "bob@example.com", Role = "User", Status = "Inactive" },
+new() { Id = 4, Name = "Alice Brown", Email = "alice@example.com", Role = "Moderator", Status = "Active" },
+new() { Id = 5, Name = "Charlie Wilson", Email = "charlie@example.com", Role = "User", Status = "Pending" },
+new() { Id = 6, Name = "Diana Davis", Email = "diana@example.com", Role = "Admin", Status = "Active" },
+new() { Id = 7, Name = "Eve Miller", Email = "eve@example.com", Role = "User", Status = "Inactive" },
+new() { Id = 8, Name = "Frank Garcia", Email = "frank@example.com", Role = "Moderator", Status = "Active" }
+};
+
+
+    private void ShowMessage(string msg)
+    {
+        message = msg;
+    }
+
+    private void SubmitForm()
+    {
+        message = $"Form submitted: {formData.FullName}, {formData.Email}, {formData.Country}";
+    }
+
+    private void ResetForm()
+    {
+        formData = new FormData();
+        message = "Form reset";
+    }
+
+    private void OnUserRowClick(SampleUser user)
+    {
+        message = $"Clicked on user: {user.Name}";
+    }
+
+    private void OnUserEdit(SampleUser user)
+    {
+        message = $"Edit user: {user.Name}";
+    }
+
+    private void OnUserDelete(SampleUser user)
+    {
+        sampleUsers.Remove(user);
+        message = $"Deleted user: {user.Name}";
+    }
+
+
+    public class FormData
+    {
+        public string FullName { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string Phone { get; set; } = "";
+        public string Bio { get; set; } = "";
+        public string Country { get; set; } = "";
+        public bool Subscribe { get; set; } = false;
+    }
+
+    public class SampleUser
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string Role { get; set; } = "";
+        public string Status { get; set; } = "";
+    }
+}

@@ -1,0 +1,167 @@
+﻿@page "/counter"
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Interactive Counter</PageTitle>
+
+<h1>Interactive Counter</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body text-center">
+                <h2 class="display-4 @GetCountClass()">@currentCount</h2>
+                <p class="text-muted">Current count</p>
+
+                <div class="btn-group" role="group">
+                    <button class="btn btn-danger" @onclick="DecrementCount" @onclick:preventDefault="true"
+                        disabled="@(currentCount <= 0)">
+                        <i class="bi bi-dash-lg"></i> Decrement
+                    </button>
+                    <button class="btn btn-primary" @onclick="IncrementCount" @onclick:preventDefault="true">
+                        <i class="bi bi-plus-lg"></i> Increment
+                    </button>
+                </div>
+
+                <div class="mt-3">
+                    <button class="btn btn-warning" @onclick="ResetCount" @onclick:preventDefault="true">
+                        <i class="bi bi-arrow-clockwise"></i> Reset
+                    </button>
+                    <button class="btn btn-info" @onclick="RandomCount" @onclick:preventDefault="true">
+                        <i class="bi bi-shuffle"></i> Random
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5>Counter Statistics</h5>
+                <ul class="list-unstyled">
+                    <li><strong>Total Operations:</strong> @totalOperations</li>
+                    <li><strong>Increments:</strong> @incrementCount</li>
+                    <li><strong>Decrements:</strong> @decrementCount</li>
+                    <li><strong>Resets:</strong> @resetCount</li>
+                    <li><strong>Last Action:</strong> @lastAction</li>
+                </ul>
+
+                <div class="mt-3">
+                    <h6>Quick Actions</h6>
+                    <div class="btn-group-vertical w-100" role="group">
+                        <button class="btn btn-outline-primary btn-sm" @onclick="() => AddToCount(5)">
+                            +5
+                        </button>
+                        <button class="btn btn-outline-primary btn-sm" @onclick="() => AddToCount(10)">
+                            +10
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" @onclick="() => AddToCount(-5)">
+                            -5
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" @onclick="() => AddToCount(-10)">
+                            -10
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (showCelebration)
+{
+    <div class="alert alert-success mt-3 text-center">
+        <h4>🎉 Congratulations! 🎉</h4>
+        <p>You've reached @currentCount! That's a milestone!</p>
+    </div>
+}
+
+@code {
+    private int currentCount = 0;
+    private int totalOperations = 0;
+    private int incrementCount = 0;
+    private int decrementCount = 0;
+    private int resetCount = 0;
+    private string lastAction = "None";
+    private bool showCelebration = false;
+
+    private async Task IncrementCount()
+    {
+        currentCount++;
+        incrementCount++;
+        totalOperations++;
+        lastAction = "Increment";
+
+        await CheckForMilestone();
+        await JSRuntime.InvokeVoidAsync("console.log", $"Count incremented to {currentCount}");
+    }
+
+    private async Task DecrementCount()
+    {
+        if (currentCount > 0)
+        {
+            currentCount--;
+            decrementCount++;
+            totalOperations++;
+            lastAction = "Decrement";
+
+            await CheckForMilestone();
+            await JSRuntime.InvokeVoidAsync("console.log", $"Count decremented to {currentCount}");
+        }
+    }
+
+    private async Task ResetCount()
+    {
+        currentCount = 0;
+        resetCount++;
+        totalOperations++;
+        lastAction = "Reset";
+        showCelebration = false;
+
+        await JSRuntime.InvokeVoidAsync("console.log", "Count reset to 0");
+    }
+
+    private async Task RandomCount()
+    {
+        var random = new Random();
+        currentCount = random.Next(-100, 101);
+        totalOperations++;
+        lastAction = "Random";
+
+        await CheckForMilestone();
+        await JSRuntime.InvokeVoidAsync("console.log", $"Count set to random value: {currentCount}");
+    }
+
+    private async Task AddToCount(int value)
+    {
+        currentCount += value;
+        totalOperations++;
+        lastAction = value > 0 ? $"Add {value}" : $"Subtract {Math.Abs(value)}";
+
+        await CheckForMilestone();
+        await JSRuntime.InvokeVoidAsync("console.log", $"Count changed by {value} to {currentCount}");
+    }
+
+    private async Task CheckForMilestone()
+    {
+        if (currentCount % 10 == 0 && currentCount > 0)
+        {
+            showCelebration = true;
+            await JSRuntime.InvokeVoidAsync("console.log", $"Milestone reached: {currentCount}");
+
+            // Hide celebration after 3 seconds
+            await Task.Delay(3000);
+            showCelebration = false;
+        }
+    }
+
+    private string GetCountClass()
+    {
+        return currentCount switch
+        {
+            > 0 => "text-success",
+            < 0 => "text-danger",
+            _ => "text-primary"
+        };
+    }
+}

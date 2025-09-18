@@ -1,0 +1,69 @@
+@using Microsoft.AspNetCore.Components.Web
+
+<div class="@GetCardClass()" @attributes="AdditionalAttributes">
+    @if (!string.IsNullOrEmpty(Title) || HeaderTemplate != null)
+    {
+        <div class="card-header">
+            @if (HeaderTemplate != null)
+            {
+                @HeaderTemplate
+            }
+            else
+            {
+                <h5 class="card-title mb-0">@Title</h5>
+            }
+        </div>
+    }
+    
+    <div class="card-body">
+        @if (BodyTemplate != null)
+        {
+            @BodyTemplate
+        }
+        else
+        {
+            @ChildContent
+        }
+    </div>
+    
+    @if (FooterTemplate != null)
+    {
+        <div class="card-footer">
+            @FooterTemplate
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public RenderFragment? HeaderTemplate { get; set; }
+    [Parameter] public RenderFragment? BodyTemplate { get; set; }
+    [Parameter] public RenderFragment? FooterTemplate { get; set; }
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public CardStyle Style { get; set; } = CardStyle.Default;
+    [Parameter] public bool IsClickable { get; set; }
+    [Parameter] public EventCallback<MouseEventArgs> OnClick { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private string GetCardClass()
+    {
+        var baseClass = "card";
+        var styleClass = Style switch
+        {
+            CardStyle.Default => "",
+            CardStyle.Outline => "border",
+            CardStyle.Filled => "bg-light",
+            _ => ""
+        };
+        var clickableClass = IsClickable ? "cursor-pointer" : "";
+
+        return $"{baseClass} {styleClass} {clickableClass}".Trim();
+    }
+
+    public enum CardStyle
+    {
+        Default,
+        Outline,
+        Filled
+    }
+}

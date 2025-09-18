@@ -1,0 +1,123 @@
+@using Microsoft.AspNetCore.Components.Web
+@typeparam TItem
+
+<div class="templated-list">
+    @if (Items != null && Items.Any())
+    {
+        <div class="list-header mb-3">
+            @if (HeaderTemplate != null)
+            {
+                @HeaderTemplate
+            }
+            else
+            {
+                <h5>@Title</h5>
+            }
+        </div>
+
+        <div class="list-container">
+            @foreach (var item in Items)
+            {
+                <div class="list-item @GetItemClass(item)" @onclick="() => OnItemClick.InvokeAsync(item)"
+                    @onmouseover="() => OnItemHover.InvokeAsync(item)" @onmouseout="() => OnItemLeave.InvokeAsync(item)">
+                    @if (ItemTemplate != null)
+                    {
+                        @ItemTemplate(item)
+                    }
+                    else
+                    {
+                        <div class="default-item">
+                            @item?.ToString()
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        @if (FooterTemplate != null)
+        {
+            <div class="list-footer mt-3">
+                @FooterTemplate
+            </div>
+        }
+    }
+    else
+    {
+        <div class="empty-state text-center py-5">
+            @if (EmptyTemplate != null)
+            {
+                @EmptyTemplate
+            }
+            else
+            {
+                <div class="text-muted">
+                    <i class="bi bi-inbox display-4"></i>
+                    <p class="mt-2">No items to display</p>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public IEnumerable<TItem>? Items { get; set; }
+    [Parameter] public RenderFragment? HeaderTemplate { get; set; }
+    [Parameter] public RenderFragment<TItem>? ItemTemplate { get; set; }
+    [Parameter] public RenderFragment? FooterTemplate { get; set; }
+    [Parameter] public RenderFragment? EmptyTemplate { get; set; }
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public EventCallback<TItem> OnItemClick { get; set; }
+    [Parameter] public EventCallback<TItem> OnItemHover { get; set; }
+    [Parameter] public EventCallback<TItem> OnItemLeave { get; set; }
+    [Parameter] public Func<TItem, string>? ItemClassFunction { get; set; }
+    [Parameter] public bool IsClickable { get; set; } = true;
+    [Parameter] public bool ShowHoverEffects { get; set; } = true;
+    [Parameter] public string? ContainerClass { get; set; }
+    [Parameter] public string? ItemClass { get; set; } = "list-group-item";
+
+    private string GetItemClass(TItem item)
+    {
+        var baseClass = ItemClass ?? "list-group-item";
+        var clickableClass = IsClickable ? "cursor-pointer" : "";
+        var hoverClass = ShowHoverEffects ? "hover-effect" : "";
+        var customClass = ItemClassFunction?.Invoke(item) ?? "";
+
+        return $"{baseClass} {clickableClass} {hoverClass} {customClass}".Trim();
+    }
+}
+
+<style>
+    .templated-list .list-container {
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        overflow: hidden;
+    }
+
+    .templated-list .list-item {
+        border-bottom: 1px solid #dee2e6;
+        transition: all 0.2s ease;
+    }
+
+    .templated-list .list-item:last-child {
+        border-bottom: none;
+    }
+
+    .templated-list .list-item.cursor-pointer:hover {
+        background-color: #f8f9fa;
+        transform: translateX(2px);
+    }
+
+    .templated-list .list-item.hover-effect:hover {
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .templated-list .default-item {
+        padding: 0.75rem 1rem;
+    }
+
+    .templated-list .empty-state {
+        background-color: #f8f9fa;
+        border: 2px dashed #dee2e6;
+        border-radius: 0.375rem;
+    }
+</style>

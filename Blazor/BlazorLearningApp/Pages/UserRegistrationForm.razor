@@ -1,0 +1,208 @@
+@page "/user-registration"
+@using BlazorLearningApp.Models
+@using System.ComponentModel.DataAnnotations
+@inject IJSRuntime JSRuntime
+
+<PageTitle>User Registration</PageTitle>
+
+<h1>User Registration Form</h1>
+
+<EditForm Model="@userRegistration" OnValidSubmit="@HandleValidSubmit" OnInvalidSubmit="@HandleInvalidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary class="alert alert-danger" />
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="firstName" class="form-label">First Name *</label>
+                <InputText id="firstName" class="form-control" @bind-Value="userRegistration.FirstName"
+                    @oninput="OnFieldChanged" />
+                <ValidationMessage For="@(() => userRegistration.FirstName)" class="text-danger" />
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="lastName" class="form-label">Last Name *</label>
+                <InputText id="lastName" class="form-control" @bind-Value="userRegistration.LastName"
+                    @oninput="OnFieldChanged" />
+                <ValidationMessage For="@(() => userRegistration.LastName)" class="text-danger" />
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label for="email" class="form-label">Email Address *</label>
+        <InputText id="email" type="email" class="form-control" @bind-Value="userRegistration.Email"
+            @oninput="OnFieldChanged" />
+        <ValidationMessage For="@(() => userRegistration.Email)" class="text-danger" />
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="password" class="form-label">Password *</label>
+                <InputText id="password" type="password" class="form-control" @bind-Value="userRegistration.Password"
+                    @oninput="OnFieldChanged" />
+                <ValidationMessage For="@(() => userRegistration.Password)" class="text-danger" />
+                <div class="form-text">Password must contain at least 8 characters with uppercase, lowercase, number,
+                    and special character.</div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="confirmPassword" class="form-label">Confirm Password *</label>
+                <InputText id="confirmPassword" type="password" class="form-control"
+                    @bind-Value="userRegistration.ConfirmPassword" @oninput="OnFieldChanged" />
+                <ValidationMessage For="@(() => userRegistration.ConfirmPassword)" class="text-danger" />
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="dateOfBirth" class="form-label">Date of Birth *</label>
+                <InputDate id="dateOfBirth" class="form-control" @bind-Value="userRegistration.DateOfBirth"
+                    @onchange="OnFieldChanged" />
+                <ValidationMessage For="@(() => userRegistration.DateOfBirth)" class="text-danger" />
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="phoneNumber" class="form-label">Phone Number *</label>
+                <InputText id="phoneNumber" type="tel" class="form-control" @bind-Value="userRegistration.PhoneNumber"
+                    @oninput="OnFieldChanged" />
+                <ValidationMessage For="@(() => userRegistration.PhoneNumber)" class="text-danger" />
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label for="country" class="form-label">Country *</label>
+        <InputSelect id="country" class="form-select" @bind-Value="userRegistration.Country" @onchange="OnFieldChanged">
+            <option value="">Select a country</option>
+            <option value="US">United States</option>
+            <option value="CA">Canada</option>
+            <option value="UK">United Kingdom</option>
+            <option value="AU">Australia</option>
+            <option value="DE">Germany</option>
+            <option value="FR">France</option>
+            <option value="JP">Japan</option>
+            <option value="Other">Other</option>
+        </InputSelect>
+        <ValidationMessage For="@(() => userRegistration.Country)" class="text-danger" />
+    </div>
+
+    <div class="mb-3">
+        <label for="bio" class="form-label">Bio (Optional)</label>
+        <InputTextArea id="bio" class="form-control" rows="3" @bind-Value="userRegistration.Bio"
+            @oninput="OnFieldChanged" placeholder="Tell us about yourself..." />
+        <div class="form-text">@userRegistration.Bio.Length / 500 characters</div>
+    </div>
+
+    <div class="mb-3 form-check">
+        <InputCheckbox id="agreeToTerms" class="form-check-input" @bind-Value="userRegistration.AgreeToTerms"
+            @onchange="OnFieldChanged" />
+        <label class="form-check-label" for="agreeToTerms">
+            I agree to the <a href="#" @onclick="ShowTerms">Terms and Conditions</a> *
+        </label>
+        <ValidationMessage For="@(() => userRegistration.AgreeToTerms)" class="text-danger" />
+    </div>
+
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+        <button type="button" class="btn btn-secondary me-md-2" @onclick="ResetForm">Reset</button>
+        <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+            @if (isSubmitting)
+            {
+                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            }
+            Register
+        </button>
+    </div>
+</EditForm>
+
+@if (isSubmitted)
+{
+    <div class="alert alert-success mt-4">
+        <h4><i class="bi bi-check-circle-fill me-2"></i>Registration Successful!</h4>
+        <p>Welcome, @userRegistration.FirstName @userRegistration.LastName!</p>
+        <p>Your account has been created with email: <strong>@userRegistration.Email</strong></p>
+        <button class="btn btn-outline-success" @onclick="ResetForm">Register Another User</button>
+    </div>
+}
+
+@if (showTerms)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Terms and Conditions</h5>
+                    <button type="button" class="btn-close" @onclick="CloseTerms"></button>
+                </div>
+                <div class="modal-body">
+                    <p>By using this service, you agree to:</p>
+                    <ul>
+                        <li>Provide accurate and complete information</li>
+                        <li>Maintain the security of your account</li>
+                        <li>Use the service in compliance with applicable laws</li>
+                        <li>Respect the privacy of other users</li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseTerms">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private UserRegistration userRegistration = new();
+    private bool isSubmitted = false;
+    private bool isSubmitting = false;
+    private bool showTerms = false;
+    private int fieldChangeCount = 0;
+
+    private async Task OnFieldChanged()
+    {
+        fieldChangeCount++;
+        await JSRuntime.InvokeVoidAsync("console.log", $"Field changed. Total changes: {fieldChangeCount}");
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        isSubmitting = true;
+
+        // Simulate API call delay
+        await Task.Delay(2000);
+
+        isSubmitted = true;
+        isSubmitting = false;
+
+        await JSRuntime.InvokeVoidAsync("console.log", "Form submitted successfully");
+    }
+
+    private async Task HandleInvalidSubmit()
+    {
+        await JSRuntime.InvokeVoidAsync("console.log", "Form validation failed");
+    }
+
+    private void ResetForm()
+    {
+        userRegistration = new UserRegistration();
+        isSubmitted = false;
+        isSubmitting = false;
+        fieldChangeCount = 0;
+    }
+
+    private void ShowTerms()
+    {
+        showTerms = true;
+    }
+
+    private void CloseTerms()
+    {
+        showTerms = false;
+    }
+}

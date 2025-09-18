@@ -1,0 +1,157 @@
+@page "/templated-component"
+@using BlazorLearningApp.Models
+
+<PageTitle>Templated Component</PageTitle>
+
+<h1>Templated Component Demo</h1>
+
+<div class="row">
+    <div class="col-12">
+        <h3>Data Table with Custom Templates</h3>
+        
+        <DataTable Items="@users" TItem="User">
+            <HeaderTemplate>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Actions</th>
+            </HeaderTemplate>
+            <RowTemplate>
+                <td>@context.Id</td>
+                <td>@context.Name</td>
+                <td>@context.Email</td>
+                <td>
+                    <span class="badge @GetRoleBadgeClass(context.Role)">@context.Role</span>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" @onclick="() => EditUser(context)">Edit</button>
+                    <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteUser(context)">Delete</button>
+                </td>
+            </RowTemplate>
+            <EmptyTemplate>
+                <div class="text-center py-4">
+                    <i class="oi oi-warning"></i>
+                    <p class="mb-0">No users found</p>
+                </div>
+            </EmptyTemplate>
+            <PaginationTemplate>
+                <nav>
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item"><a class="page-link" href="#">Previous</a></li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item"><a class="page-link" href="#">Next</a></li>
+                    </ul>
+                </nav>
+            </PaginationTemplate>
+        </DataTable>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <h3>Product Table with Different Template</h3>
+        
+        <DataTable Items="@products" TItem="Product">
+            <HeaderTemplate>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Category</th>
+                <th>In Stock</th>
+            </HeaderTemplate>
+            <RowTemplate>
+                <td>@context.Name</td>
+                <td>@context.Price.ToString("C")</td>
+                <td>@context.Category</td>
+                <td>
+                    @if (context.InStock)
+                    {
+                        <span class="badge bg-success">Yes</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger">No</span>
+                    }
+                </td>
+            </RowTemplate>
+            <EmptyTemplate>
+                <div class="text-center py-4">
+                    <i class="oi oi-cart"></i>
+                    <p class="mb-0">No products available</p>
+                </div>
+            </EmptyTemplate>
+        </DataTable>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(selectedUser))
+{
+    <div class="alert alert-info mt-3">
+        <h5>Selected User: @selectedUser</h5>
+    </div>
+}
+
+@code {
+    private List<User> users = new();
+    private List<Product> products = new();
+    private string selectedUser = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        // Sample data
+        users = new List<User>
+        {
+            new User { Id = 1, Name = "John Doe", Email = "john@example.com", Role = "Admin" },
+            new User { Id = 2, Name = "Jane Smith", Email = "jane@example.com", Role = "User" },
+            new User { Id = 3, Name = "Bob Johnson", Email = "bob@example.com", Role = "Moderator" },
+            new User { Id = 4, Name = "Alice Brown", Email = "alice@example.com", Role = "User" }
+        };
+
+        products = new List<Product>
+        {
+            new Product { Name = "Laptop", Price = 999.99m, Category = "Electronics", InStock = true },
+            new Product { Name = "Mouse", Price = 29.99m, Category = "Electronics", InStock = true },
+            new Product { Name = "Keyboard", Price = 79.99m, Category = "Electronics", InStock = false },
+            new Product { Name = "Monitor", Price = 299.99m, Category = "Electronics", InStock = true }
+        };
+    }
+
+    private void EditUser(User user)
+    {
+        selectedUser = $"Editing {user.Name} ({user.Email})";
+    }
+
+    private void DeleteUser(User user)
+    {
+        selectedUser = $"Deleting {user.Name} ({user.Email})";
+    }
+
+    private string GetRoleBadgeClass(string role)
+    {
+        return role switch
+        {
+            "Admin" => "bg-danger",
+            "Moderator" => "bg-warning",
+            "User" => "bg-primary",
+            _ => "bg-secondary"
+        };
+    }
+
+    public class User
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
+    }
+
+    public class Product
+    {
+        public string Name { get; set; } = string.Empty;
+        public decimal Price { get; set; }
+        public string Category { get; set; } = string.Empty;
+        public bool InStock { get; set; }
+    }
+}

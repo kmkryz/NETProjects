@@ -1,0 +1,72 @@
+@page "/address-form"
+@using BlazorLearningApp.Models
+@using System.ComponentModel.DataAnnotations
+
+<PageTitle>Address Form</PageTitle>
+
+<h1>Address Form</h1>
+
+<EditForm Model="@address" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+    
+    <div class="mb-3">
+        <label for="name" class="form-label">Name</label>
+        <InputText id="name" class="form-control" @bind-Value="address.Name" />
+        <ValidationMessage For="@(() => address.Name)" class="text-danger" />
+    </div>
+
+    <div class="mb-3">
+        <label for="street" class="form-label">Street</label>
+        <InputText id="street" class="form-control" @bind-Value="address.Street" />
+        <ValidationMessage For="@(() => address.Street)" class="text-danger" />
+    </div>
+
+    <div class="mb-3">
+        <label for="city" class="form-label">City</label>
+        <InputText id="city" class="form-control" @bind-Value="address.City" />
+        <ValidationMessage For="@(() => address.City)" class="text-danger" />
+    </div>
+
+    <div class="mb-3">
+        <label for="state" class="form-label">State</label>
+        <InputText id="state" class="form-control" @bind-Value="address.State" />
+        <ValidationMessage For="@(() => address.State)" class="text-danger" />
+    </div>
+
+    <div class="mb-3">
+        <label for="zipcode" class="form-label">ZIP Code</label>
+        <InputText id="zipcode" class="form-control" @bind-Value="address.ZipCode" />
+        <ValidationMessage For="@(() => address.ZipCode)" class="text-danger" />
+    </div>
+
+    <div class="mb-3">
+        <label for="country" class="form-label">Country</label>
+        <InputText id="country" class="form-control" @bind-Value="address.Country" />
+        <ValidationMessage For="@(() => address.Country)" class="text-danger" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Submit</button>
+</EditForm>
+
+@if (isSubmitted)
+{
+    <div class="alert alert-success mt-3">
+        <h4>Address Submitted Successfully!</h4>
+        <p><strong>Name:</strong> @address.Name</p>
+        <p><strong>Street:</strong> @address.Street</p>
+        <p><strong>City:</strong> @address.City</p>
+        <p><strong>State:</strong> @address.State</p>
+        <p><strong>ZIP Code:</strong> @address.ZipCode</p>
+        <p><strong>Country:</strong> @address.Country</p>
+    </div>
+}
+
+@code {
+    private Address address = new();
+    private bool isSubmitted = false;
+
+    private void HandleValidSubmit()
+    {
+        isSubmitted = true;
+    }
+}

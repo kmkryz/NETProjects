@@ -1,0 +1,266 @@
+@page "/templated-component-demo"
+@using BlazorLearningApp.Models
+@using BlazorLearningApp.Shared
+
+<PageTitle>Templated Component Demo</PageTitle>
+
+<h1>Templated Component Demo</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        <h3>Simple String List</h3>
+        <TemplatedList Items="@stringItems" Title="Programming Languages" OnItemClick="@StringItemClickCallback">
+            <ItemTemplate Context="item">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>@item</span>
+                    <small class="text-muted">@item.Length characters</small>
+                </div>
+            </ItemTemplate>
+            <HeaderTemplate>
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5>Programming Languages</h5>
+                    <span class="badge bg-primary">@stringItems.Count items</span>
+                </div>
+            </HeaderTemplate>
+        </TemplatedList>
+    </div>
+
+    <div class="col-md-6">
+        <h3>User Registration List</h3>
+        <TemplatedList Items="@userRegistrations" OnItemClick="@UserItemClickCallback"
+            ItemClassFunction="@GetUserItemClass">
+            <ItemTemplate Context="user">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="mb-1">@user.FirstName @user.LastName</h6>
+                        <small class="text-muted">@user.Email</small>
+                        <br>
+                        <small class="text-muted">@user.Country • @user.DateOfBirth.ToString("MMM dd, yyyy")</small>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge @GetStatusBadgeClass(user)">@GetStatusText(user)</span>
+                    </div>
+                </div>
+            </ItemTemplate>
+            <EmptyTemplate>
+                <div class="text-center py-4">
+                    <i class="bi bi-people display-4 text-muted"></i>
+                    <p class="mt-2 text-muted">No users registered yet</p>
+                    <button class="btn btn-primary btn-sm" @onclick="AddSampleUsers">Add Sample Users</button>
+                </div>
+            </EmptyTemplate>
+        </TemplatedList>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <h3>Address List with Custom Templates</h3>
+        <TemplatedList Items="@addresses" OnItemClick="@AddressItemClickCallback" ShowHoverEffects="true">
+            <HeaderTemplate>
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5>Address Book</h5>
+                    <div>
+                        <button class="btn btn-sm btn-outline-primary me-2" @onclick="AddSampleAddresses">
+                            Add Sample Addresses
+                        </button>
+                        <span class="badge bg-secondary">@addresses.Count addresses</span>
+                    </div>
+                </div>
+            </HeaderTemplate>
+            <ItemTemplate Context="address">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h6 class="mb-1">@address.Name</h6>
+                        <p class="mb-1 text-muted">@address.Street</p>
+                        <small class="text-muted">@address.City, @address.State @address.ZipCode</small>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <div class="btn-group-vertical btn-group-sm">
+                            <button class="btn btn-outline-primary" @onclick="() => EditAddress(address)"
+                                @onclick:stopPropagation="true">
+                                <i class="bi bi-pencil"></i> Edit
+                            </button>
+                            <button class="btn btn-outline-danger" @onclick="() => DeleteAddress(address)"
+                                @onclick:stopPropagation="true">
+                                <i class="bi bi-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </ItemTemplate>
+            <FooterTemplate>
+                <div class="text-center">
+                    <button class="btn btn-primary" @onclick="AddNewAddress">
+                        <i class="bi bi-plus"></i> Add New Address
+                    </button>
+                </div>
+            </FooterTemplate>
+        </TemplatedList>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Selected Items</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6>Selected String:</h6>
+                        <p class="text-muted">@selectedString</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>Selected User:</h6>
+                        <p class="text-muted">@selectedUser</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>Selected Address:</h6>
+                        <p class="text-muted">@selectedAddress</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<string> stringItems = new() { "C#", "JavaScript", "Python", "Java", "TypeScript", "Go", "Rust" };
+    private List<UserRegistration> userRegistrations = new();
+    private List<Address> addresses = new();
+
+    private string selectedString = "None";
+    private string selectedUser = "None";
+    private string selectedAddress = "None";
+
+    private EventCallback<string> StringItemClickCallback => EventCallback.Factory.Create<string>(this, OnStringItemClick);
+    private EventCallback<UserRegistration> UserItemClickCallback => EventCallback.Factory.Create<UserRegistration>(this,
+    OnUserItemClick);
+    private EventCallback<Address> AddressItemClickCallback => EventCallback.Factory.Create<Address>(this,
+    OnAddressItemClick);
+
+    private void OnStringItemClick(string item)
+    {
+        selectedString = item;
+        StateHasChanged();
+    }
+
+    private void OnUserItemClick(UserRegistration user)
+    {
+        selectedUser = $"{user.FirstName} {user.LastName} ({user.Email})";
+        StateHasChanged();
+    }
+
+    private void OnAddressItemClick(Address address)
+    {
+        selectedAddress = $"{address.Name} - {address.City}, {address.State}";
+        StateHasChanged();
+    }
+
+    private string GetUserItemClass(UserRegistration user)
+    {
+        return user.AgreeToTerms ? "border-success" : "border-warning";
+    }
+
+    private string GetStatusBadgeClass(UserRegistration user)
+    {
+        return user.AgreeToTerms ? "bg-success" : "bg-warning";
+    }
+
+    private string GetStatusText(UserRegistration user)
+    {
+        return user.AgreeToTerms ? "Verified" : "Pending";
+    }
+
+    private void AddSampleUsers()
+    {
+        userRegistrations.AddRange(new[]
+        {
+new UserRegistration
+{
+FirstName = "John",
+LastName = "Doe",
+Email = "john.doe@example.com",
+Country = "US",
+DateOfBirth = DateTime.Now.AddYears(-25),
+AgreeToTerms = true
+},
+new UserRegistration
+{
+FirstName = "Jane",
+LastName = "Smith",
+Email = "jane.smith@example.com",
+Country = "CA",
+DateOfBirth = DateTime.Now.AddYears(-30),
+AgreeToTerms = false
+},
+new UserRegistration
+{
+FirstName = "Bob",
+LastName = "Johnson",
+Email = "bob.johnson@example.com",
+Country = "UK",
+DateOfBirth = DateTime.Now.AddYears(-28),
+AgreeToTerms = true
+}
+});
+        StateHasChanged();
+    }
+
+    private void AddSampleAddresses()
+    {
+        addresses.AddRange(new[]
+        {
+new Address
+{
+Name = "John Doe",
+Street = "123 Main St",
+City = "New York",
+State = "NY",
+ZipCode = "10001",
+Country = "USA"
+},
+new Address
+{
+Name = "Jane Smith",
+Street = "456 Oak Ave",
+City = "Los Angeles",
+State = "CA",
+ZipCode = "90210",
+Country = "USA"
+},
+new Address
+{
+Name = "Bob Johnson",
+Street = "789 Pine St",
+City = "Chicago",
+State = "IL",
+ZipCode = "60601",
+Country = "USA"
+}
+});
+        StateHasChanged();
+    }
+
+    private void EditAddress(Address address)
+    {
+        // In a real app, this would open an edit dialog
+        selectedAddress = $"Editing: {address.Name}";
+        StateHasChanged();
+    }
+
+    private void DeleteAddress(Address address)
+    {
+        addresses.Remove(address);
+        StateHasChanged();
+    }
+
+    private void AddNewAddress()
+    {
+        // In a real app, this would open an add dialog
+        selectedAddress = "Add new address clicked";
+        StateHasChanged();
+    }
+}
